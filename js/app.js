@@ -34,5 +34,19 @@ var app = new Framework7({
   },
 });
 
+document.addEventListener('deviceready', function () {
+  // Enable to debug issues.
+  // window.plugins.OneSignal.setLogLevel({logLevel: 4, visualLevel: 4});
+  
+  var notificationOpenedCallback = function(jsonData) {
+    console.log('notificationOpenedCallback: ' + JSON.stringify(jsonData));
+  };
+
+  window.plugins.OneSignal
+    .startInit("91c9d699-820a-4d3a-bbad-54057a2e6477")
+    .handleNotificationOpened(notificationOpenedCallback)
+    .endInit();
+}, false);
+
 var room_id = "shj1820938isdadiauq"
 var DBref = new Firebase('https://gelaro-dev.firebaseio.com/'+room_id);
