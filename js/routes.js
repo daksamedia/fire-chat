@@ -180,36 +180,102 @@ var routes = [
 	on:{
 		pageInit:function(page){
 		  var my_name = "Asep"
-			
+		  
+		  scroll_down_chat()
+		  
 		  var room_id = "shj1820938isdadiauq"
+		  var player_id = "" //ID ONESIGNAL ON APP
 		  var DBref = new Firebase('https://gelaro-dev.firebaseio.com/'+room_id);
+		  
+		  //MAKE NOTIF FOR USER
+		  function notify_user(msg){
+			app.request({
+				url:'https://onesignal.com/api/v1/notifications',
+				method:'POST',
+				headers:{
+					"Authorization":"Basic NWM3NjUxN2EtYWI5Yy00ZDBjLWIwN2EtYWM5NmVhNDNhZWZk",
+					"Content-Type":"application/json"
+				},
+				data:{
+					"app_id": "14024293-9df2-4fbf-9c61-6c6edfabb7cf", 
+					"include_player_ids": [
+						"3b642738-20cc-4ee4-a4d7-0e7cb04f3ca4" 
+					],
+					"data": {
+						"title": "You got Message from "+ my_name,
+						"body": msg,
+						"url": "order",
+						"id": "17368"
+					},
+					"headings": {
+						"en": "You got Message from "+ my_name,
+						"id": "Ada Pesan Masuk dari "+ my_name
+					},
+					"contents": {
+						"en": msg,
+						"id": msg,
+					}			
+				},
+				success:function(res){
+					var this_res = JSON.parse(res)
+					if(this_res.recipients > 0){
+						console.log("success")
+					}
+				}
+			})
+		  }
+		  
+		  
+		  //SCROLL_DOWN
+		  function scroll_down_chat(){
+			  var objDiv = $$(".messages-content");
+			  objDiv[0].scrollTop = objDiv[0].scrollHeight;			  
+		  }
+		  
+		  
+		  //ON ENTER CLICK SEND
 		  $$(".msg").keypress(function(e){
 			var name=my_name;
 			var txt=$$(".msg").val();
 			if(e.keyCode==13){
+				e.preventDefault();
 				if(name!="" && txt!=""){
 					DBref.push({name:name,text:txt});
 					$$(".msg").val("");
 				}else{
 					app.dialog.alert("isi semua kolom")
+					$$(".msg").val("")
 				}
+				
 			}
 		  });
 		  
+		  //SEND MESSAGE
 		  function sendmsg(){
+			var name=my_name;
+			var txt=$$(".msg").val();
 			if(name!="" && txt!=""){
-				var name=my_name;
-				var txt=$$(".msg").val();
 				DBref.push({name:name,text:txt});
+				
+			}else{
+				app.dialog.alert("mohon isi semua kolom");
+				$$(".msg").empty();
 			}
-			$$(".msg").val("");
+			
+			notify_user(txt)
 		  }
 		  
+		  //ON CLICK SEND
 		  $$(".send_btn").click(sendmsg)
 		  
+		  //ON CHILD ADDED IN FB DATABASE
 		  DBref.on("child_added",function(snapshot){
 			var message = snapshot.val();
-			displayMsg(message.name,message.text)
+			displayMsg(message.name,message.text);
+			
+			scroll_down_chat()
+			$$(".msg").val("");
+			$$(".msg").css("height","32px")
 		  });
 		  
 		  function displayMsg(name,text){
